@@ -1,0 +1,182 @@
+openapi: 3.0.3
+info:
+  title: ECI Notification Service API
+  version: 1.0.0
+  description: Email/SMS notification dispatch and delivery logs.
+servers:
+  - url: http://localhost:3006
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: Healthy
+
+  /v1/notifications:
+    post:
+      summary: Send notification (idempotent)
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendNotificationRequest'
+      responses:
+        '201':
+          description: Notification accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationLog'
+        '200':
+          description: Idempotent replay
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationLog'
+        '400':
+          $ref: '#/components/responses/StandardError'
+    get:
+      summary: List notification logs
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - in: query
+          name: event_type
+          schema:
+            type: string
+            enum: [ORDER_CONFIRMED, PAYMENT_FAILED, SHIPMENT_SHIPPED, SHIPMENT_DELIVERED]
+        - in: query
+          name: channel
+          schema:
+            type: string
+            enum: [EMAIL, SMS]
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [QUEUED, SENT, FAILED]
+      responses:
+        '200':
+          description: Paginated logs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedNotifications'
+
+  /v1/notifications/events:
+    post:
+      summary: Publish business event to notification templates
+      description: Intended endpoint for Order/Payment/Shipping service integrations.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [event_type, order_id]
+              properties:
+                event_type:
+                  type: string
+                  enum: [ORDER_CONFIRMED, PAYMENT_FAILED, SHIPMENT_SHIPPED, SHIPMENT_DELIVERED]
+                order_id:
+                  type: string
+                customer_id:
+                  type: string
+                customer_email:
+                  type: string
+                customer_phone:
+                  type: string
+                payload:
+                  type: object
+      responses:
+        '202':
+          description: Accepted
+
+components:
+  parameters:
+    Page:
+      in: query
+      name: page
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    Limit:
+      in: query
+      name: limit
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 10
+    IdempotencyKeyHeader:
+      in: header
+      name: Idempotency-Key
+      required: true
+      schema:
+        type: string
+  responses:
+    StandardError:
+      description: Standard error format
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Error:
+      type: object
+      required: [code, message, correlationId]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        correlationId:
+          type: string
+    SendNotificationRequest:
+      type: object
+      required: [channel, event_type, recipient, content]
+      properties:
+        channel:
+          type: string
+          enum: [EMAIL, SMS]
+        event_type:
+          type: string
+        recipient:
+          type: string
+        content:
+          type: string
+    NotificationLog:
+      type: object
+      properties:
+        notification_id:
+          type: string
+        event_type:
+          type: string
+        channel:
+          type: string
+        recipient:
+          type: string
+        status:
+          type: string
+          enum: [QUEUED, SENT, FAILED]
+        created_at:
+          type: string
+          format: date-time
+    PaginatedNotifications:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationLog'

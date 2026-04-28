@@ -1,0 +1,28 @@
+version: '3.9'
+services:
+  notification-db:
+    image: postgres:16
+    container_name: notification-db
+    environment:
+      POSTGRES_DB: notification_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5436:5432"
+    volumes:
+      - notification_db_data:/var/lib/postgresql/data
+
+  notification-service:
+    build: .
+    container_name: notification-service
+    environment:
+      PORT: 3006
+      SERVICE_NAME: notification-service
+      DATABASE_URL: postgres://postgres:postgres@notification-db:5432/notification_db
+    depends_on:
+      - notification-db
+    ports:
+      - "3006:3006"
+
+volumes:
+  notification_db_data:

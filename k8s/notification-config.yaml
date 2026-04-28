@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: notification-config
+data:
+  SERVICE_NAME: notification-service
+  PORT: "3006"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: notification-secret
+type: Opaque
+stringData:
+  db_password: postgres
+  database_url: postgres://postgres:postgres@notification-db:5432/notification_db
