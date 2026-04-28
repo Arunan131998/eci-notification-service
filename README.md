@@ -68,14 +68,8 @@ docker compose -f docker-compose.yml down
 ### Seeding (PowerShell)
 Run from the `FullApplication/` root directory:
 ```powershell
-# Watch automatic seed progress
-docker compose -f docker-compose.yml logs -f seed
-
-# Rerun the seed job manually
-docker compose -f docker-compose.yml up --build seed
-
-# Seed only notification service
-docker compose -f docker-compose.yml exec notification-service npm run seed
+# Notification service has no dataset seed by design.
+# It is populated only by runtime events from Order/Payment/Shipping services.
 ```
 
 ## Endpoints
