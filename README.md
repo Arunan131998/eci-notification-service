@@ -85,8 +85,10 @@ Run from the `FullApplication/` root directory:
 - `ORDER_CANCELLED` — From Order service
 - `PAYMENT_COMPLETED` — From Payment service
 - `PAYMENT_FAILED` — From Payment service
+- `PAYMENT_REFUNDED` — From Payment service
 - `SHIPMENT_SHIPPED` — From Shipping service
 - `SHIPMENT_DELIVERED` — From Shipping service
+- `SHIPMENT_CANCELLED` — From Shipping service
 
 ## Kubernetes Deployment (Minikube)
 
